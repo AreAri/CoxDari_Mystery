@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+    <link rel="stylesheet" href="{% static 'juegos/estilos.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h2>Registro</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="nombre" placeholder="Nombre" required><br>
+            <input type="email" name="correo" placeholder="Correo electrónico" required><br>
+            <input type="number" name="edad" placeholder="Edad" required><br>
+            <input type="password" name="contraseña" placeholder="Contraseña" required><br>
+            <button type="submit">Registrarse</button>
+        </form>
+        <a href="{% url 'inicio' %}" class="btn">Volver al inicio</a>
+    </div>
+</body>
+</html>

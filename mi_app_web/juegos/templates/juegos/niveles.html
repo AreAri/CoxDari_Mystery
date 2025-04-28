@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Niveles - CoxDari Mistery</title>
+    <link rel="stylesheet" href="{% static 'juegos/niveles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Menú lateral -->
+        <nav class="sidebar">
+            <h2>CoxDari Mistery</h2>
+            <ul>
+                <li><a href="#">Inicio</a></li>
+                <li><a href="#">Perfil</a></li>
+                <li><a href="#">Mochila</a></li>
+                <li><a href="#">Cerrar sesión (Apenas vamos poco a poquito xd)</a></li>
+            </ul>
+        </nav>
+
+        <!-- Camino de niveles -->
+        <main class="nivel-camino">
+            <h1>¡Comienza tu aventura!</h1>
+            <div class="niveles">
+                <button class="nivel desbloqueado">1</button>
+                <button class="nivel desbloqueado">2</button>
+                <button class="nivel desbloqueado">3</button>
+                <button class="nivel bloqueado" disabled>4</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

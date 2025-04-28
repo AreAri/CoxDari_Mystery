@@ -1,0 +1,84 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #1e1f27;
+    color: #fff;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #13141a;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+}
+
+.sidebar h2 {
+    color: #78c800;
+    text-align: center;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 20px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px;
+    display: block;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #2e2f38;
+}
+
+.nivel-camino {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.nivel-camino h1 {
+    margin-bottom: 30px;
+}
+
+.niveles {
+    display: flex;
+    gap: 30px;
+}
+
+.nivel {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.desbloqueado {
+    background-color: #78c800;
+    color: #000;
+}
+
+.bloqueado {
+    background-color: #555;
+    color: #aaa;
+    cursor: not-allowed;
+}

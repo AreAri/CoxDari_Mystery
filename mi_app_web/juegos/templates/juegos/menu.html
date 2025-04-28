@@ -1,0 +1,25 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Menú Principal</title>
+    <link rel="stylesheet" href="{% static 'juegos/estilos.css' %}">
+</head>
+<body>
+    <div class="contenedor-menu">
+        <h1>¡Bienvenido al Menú Principal de prueba!</h1>
+        <p>Selecciona un nivel para comenzar:</p>
+
+        <div class="botones-niveles">
+            <a href="" class="boton-nivel">Nivel 1</a>
+            <a href="" class="boton-nivel">Nivel 2</a>
+            <a href="" class="boton-nivel">Nivel 3</a>
+        </div>
+
+        <br>
+        <a href="{% url 'inicio' %}" class="boton-volver">Volver al Inicio</a>
+    </div>
+</body>
+</html>
