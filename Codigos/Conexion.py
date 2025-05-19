@@ -8,7 +8,7 @@ def conectarBD():
             host="localhost",      
             database="CoxDari_Mystery",  # Nombre de la base de datos
             user="postgres",    
-            password="1316",   # Contraseña (la debes cambiar si la tuya es diferente)
+            password="1234",   # Contraseña (la debes cambiar si la tuya es diferente)
             port="5432"        
         )
 #a excepcion de estos 3
