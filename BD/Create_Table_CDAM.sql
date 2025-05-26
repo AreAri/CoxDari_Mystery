@@ -29,8 +29,7 @@ create table Capitulos (
 	nombre varchar (100),
 	descripcion text,
 	icono varchar (100),
-	orden int unique not null, --secuencia
-	id_cap_ant int references Capitulos(id_cap) --requisito
+	orden int unique not null --secuencia
 );
 
 --nivel
@@ -44,8 +43,7 @@ create table Niveles (
 	tipo tipos,
 	titulo varchar (100),
 	puntos_recompensa int,
-	orden int not null,
-	id_lv_ant int references Niveles(id_nivel)
+	orden int not null
 );
 
 create table Niveles_Teoria(
@@ -127,5 +125,4 @@ CREATE TABLE Niveles_Completados (
     fecha_completado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	 UNIQUE(id_usuario, id_nivel) 
 );
-
 
