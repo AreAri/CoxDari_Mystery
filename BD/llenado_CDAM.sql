@@ -20,7 +20,9 @@ INSERT INTO Niveles_Ejercicios (id_lvE, enunciado, solucion) VALUES
 (2, 'Casifica cuales son las estructuras de datos y cuales no ', 'pilas, colas, listas, arboles, grafos'),
 (3, 'Identifica cuales son las ED lineales y las no lineales', 'Lineales: Array, Lista | No Lineales: Árbol, Grafo'),
 (5, 'Recuerdas los aliados? veremos si conoces que esonde cada unoa de ellos', '%d -- entero, %f -- flotante, %c -- caracter'),
-(6, 'Veremos como crear a nuestros señor apuntador y como llamarlo si lo necesitas', 'dato = &numero dato2 = *dato imprimir dato2');
+(6, 'Veremos como crear a nuestros señor apuntador y como llamarlo si lo necesitas', 'dato = &numero dato2 = *dato imprimir dato2'),
+(7, 'Mi primer puntero funcional, con lo que tienes como harias un puntero para darle un valor','int main() {int numero = 10; int *puntero; puntero = &numero; 
+  printf("Valor de numero: %d\n", numero); printf("Valor usando puntero: %d\n", *puntero); return 0;}';
 
 INSERT INTO Personajes (nombre, descripcion, imagen, id_lvT_unlock) VALUES
 ('Yuli la gran sabia', 'Tiene una Maestria en Redes, puedes preguntar lo que sea es muy lista',NULL, 1),
