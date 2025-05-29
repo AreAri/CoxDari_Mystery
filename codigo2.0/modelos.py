@@ -78,25 +78,23 @@ class NivelTeoria(models.Model):
         return f"Teoría: {self.nivel.titulo}"
 
 class NivelEjercicio(models.Model):
-    nivel = models.OneToOneField(
-        Nivel, 
-        on_delete=models.CASCADE,
-        primary_key=True,
-        related_name='ejercicio'
-    )
+    nivel = models.OneToOneField(Nivel, on_delete=models.CASCADE, related_name='ejercicio')
     enunciado = models.TextField()
     solucion = models.TextField()
-    
-    def __str__(self):
-        return f"Ejercicio: {self.nivel.titulo}"
 
-class CasoPrueba(models.Model):
-    ejercicio = models.ForeignKey(NivelEjercicio, on_delete=models.CASCADE, related_name='casos_prueba')
-    input = models.TextField()
-    output = models.TextField()
+class NivelBloque(models.Model):
+    nivel = models.OneToOneField(Nivel, on_delete=models.CASCADE, related_name='bloque')
+    enunciado = models.TextField()
+    # Almacenamos el XML esperado o una representación JSON de la solución
+    solucion_xml = models.TextField()
+
+# class CasoPrueba(models.Model):
+#     ejercicio = models.ForeignKey(NivelEjercicio, on_delete=models.CASCADE, related_name='casos_prueba')
+#     input = models.TextField()
+#     output = models.TextField()
     
-    def __str__(self):
-        return f"Caso #{self.id} - {self.ejercicio.nivel.titulo}"
+#     def __str__(self):
+#         return f"Caso #{self.id} - {self.ejercicio.nivel.titulo}"
 
 class Personaje(models.Model):
     nombre = models.CharField(max_length=100)
