@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Blockly en pantalla completa</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      font-family: sans-serif;
+    }
+
+    #blocklyDiv {
+      width: 60%;
+      height: 100vh;
+    }
+
+    #codeDiv {
+      width: 40%;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 1rem;
+      background-color: #f9f9f9;
+      border-left: 2px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #codeDiv h3 {
+      margin: 0 0 1rem 0;
+    }
+
+    #code {
+      flex: 1;
+      background-color: #eee;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      align-self: start;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="blocklyDiv"></div>
+  <div id="codeDiv">
+    <h3>Código JavaScript generado:</h3>
+    <pre id="code"></pre>
+    <button onclick="runCode()">Ejecutar</button>
+  </div>
+
+  <xml id="toolbox" style="display: none">
+    <category name="Lógica" colour="#5C81A6">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+    </category>
+    <category name="Bucles" colour="#5CA65C">
+      <block type="controls_repeat_ext">
+        <value name="TIMES">
+          <shadow type="math_number">
+            <field name="NUM">3</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="controls_whileUntil"></block>
+    </category>
+    <category name="Matemáticas" colour="#5C68A6">
+      <block type="math_number">
+        <field name="NUM">0</field>
+      </block>
+      <block type="math_arithmetic"></block>
+    </category>
+    <category name="Texto" colour="#5CA68D">
+      <block type="text"></block>
+      <block type="text_print"></block>
+    </category>
+    <category name="Variables" custom="VARIABLE" colour="#A65C81"></category>
+  </xml>
+
+  <script>
+    const workspace = Blockly.inject('blocklyDiv', {
+      toolbox: document.getElementById('toolbox'),
+      scrollbars: true,
+    });
+
+    function updateCode() {
+      const code = Blockly.JavaScript.workspaceToCode(workspace);
+      document.getElementById('code').textContent = code;
+    }
+
+    function runCode() {
+      try {
+        eval(Blockly.JavaScript.workspaceToCode(workspace));
+      } catch (e) {
+        alert('Error: ' + e);
+      }
+    }
+
+    workspace.addChangeListener(updateCode);
+  </script>
+</body>
+</html>

@@ -23,9 +23,9 @@
         <main class="nivel-camino">
             <h1>¡Comienza tu aventura!</h1>
             <div class="niveles">
-                <button class="nivel desbloqueado">1</button>
-                <button class="nivel desbloqueado">2</button>
-                <button class="nivel desbloqueado">3</button>
+                <button class="nivel desbloqueado" onclick="location.href='{% url 'prueba_blocky' %}'">1</button>
+                <button class="nivel desbloqueado"onclick="location.href='{% url 'prueba_blocky1' %}'">2</button>
+                <button class="nivel desbloqueado"onclick="location.href='{% url 'prueba_blocky2' %}'">3</button>
                 <button class="nivel bloqueado" disabled>4</button>
             </div>
         </main>
