@@ -38,6 +38,12 @@
             margin: 0 15px;
             border-radius: 30px;
         }
+        .logo {
+            width: 200px; /* ajusta el tamaño a tu gusto */
+            margin: 30px auto;
+            display: block;
+        }
+
         footer {
             text-align: center;
             padding: 20px;
@@ -51,11 +57,15 @@
     <div class="hero">
         <h1>¡Bienvenido a CoxDari Mistery!</h1>
         <p>Una aventura educativa te espera. ¿Estás listo para comenzar?</p>
+
+        <img src="{% static 'images/logo.png' %}" alt="Logo CoxDari" class="logo">
+
         <div class="btn-group">
             <a href="{% url 'login' %}" class="btn btn-light btn-custom">Ingresar</a>
             <a href="{% url 'registro' %}" class="btn btn-outline-light btn-custom">Registrarse</a>
         </div>
     </div>
+
 
     <footer>
         © 2025 CoxDari. Todos los derechos reservados. | Términos y condiciones | Política de privacidad

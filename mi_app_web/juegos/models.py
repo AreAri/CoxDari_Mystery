@@ -16,7 +16,7 @@ class Usuarios(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'Usuarios'
+        db_table = 'usuarios'
 
 class Capitulos(models.Model):
     id_cap = models.AutoField(primary_key=True)

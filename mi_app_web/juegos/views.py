@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.db import connection
 from .models import Usuarios, Progreso, NivelesCompletados, Capitulos, Niveles
 import datetime
+from django.contrib.auth.hashers import make_password
+from collections import defaultdict
 
 #----------------------------------------------------------
 def index(request):
@@ -148,14 +150,22 @@ def registro(request):
                 port='5432'
             )
             cursor = conn.cursor()
+            # Verificar si ya existe un usuario con el mismo username o correo
+            cursor.execute("SELECT * FROM Usuarios WHERE username = %s OR correo = %s", (username, correo))
+            existing_user = cursor.fetchone()
 
+            if existing_user:
+                messages.error(request, "Este usuario o correo ya está registrado.")
+                return redirect('registro')
+
+            password_hash = make_password(contraseña)
             cursor.execute("""
                 INSERT INTO Usuarios (nombre, username, contraseña, correo, nivel_usuario, imagen, fecha_registro)
                 VALUES (ROW(%s, %s, %s), %s, %s, %s, DEFAULT, %s, %s)
             """, (
                 nombre, ap_paterno, ap_materno,
                 username,
-                contraseña,
+                password_hash,
                 correo,
                 imagen,
                 datetime.date.today()
@@ -177,48 +187,91 @@ def registro(request):
 
 #-------------------------------------------------------------------------------
 def menu_principal(request):
-    # Suponiendo que el login ya guardó el ID del usuario en sesión
-    id_usuario = request.session.get('id_usuario')
+    id_usuario = request.session.get('usuario_id')
     if not id_usuario:
-        return redirect('login')  # O como se llame tu vista de login
-
-    try:
-        usuario = Usuarios.objects.get(id_user=id_usuario)
-        progreso = Progreso.objects.get(id_usuario=id_usuario)
-    except Usuarios.DoesNotExist:
         return redirect('login')
-    except Progreso.DoesNotExist:
-        # Podrías inicializar progreso si es nuevo
-        return redirect('inicializar_progreso')
 
-    niveles_completados = NivelesCompletados.objects.filter(
-        id_usuario=id_usuario
-    ).values_list('id_nivel', flat=True)
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id_user,
+                   (nombre).nombre AS nombre,
+                   (nombre).ap_paterno AS ap_paterno,
+                   (nombre).ap_materno AS ap_materno,
+                   username,
+                   nivel_usuario
+            FROM Usuarios
+            WHERE id_user = %s
+        """, [id_usuario])
+        usuario_raw = cursor.fetchone()
 
-    capitulos = Capitulos.objects.all().order_by('orden')
-    niveles = Niveles.objects.all().order_by('orden')
+        if not usuario_raw:
+            return redirect('login')
 
+        usuario = {
+            'id': usuario_raw[0],
+            'nombre_completo': f"{usuario_raw[1]} {usuario_raw[2]} {usuario_raw[3]}",
+            'username': usuario_raw[4],
+            'nivel_usuario': usuario_raw[5],
+        }
+
+        cursor.execute("""
+            SELECT p.exp_total, c.nombre, n.titulo
+            FROM Progreso p
+            JOIN Capitulos c ON p.cap_act = c.id_cap
+            JOIN Niveles n ON p.lvl_act = n.id_nivel
+            WHERE p.id_usuario = %s
+            """, [id_usuario])
+
+        progreso_raw = cursor.fetchone()
+
+        if not progreso_raw:
+            return redirect('inicializar_progreso')
+
+        progreso = {
+            'exp': progreso_raw[0],
+            'capitulo': progreso_raw[1],
+            'nivel': progreso_raw[2],
+        }
+
+        # Obtener niveles completados
+        cursor.execute("""
+            SELECT id_nivel FROM Niveles_Completados WHERE id_usuario = %s
+        """, [id_usuario])
+        niveles_completados = [r[0] for r in cursor.fetchall()]
+
+        # Obtener todos los capítulos y niveles (simplificado)
+        cursor.execute("SELECT id_cap, nombre FROM Capitulos ORDER BY orden")
+        capitulos = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT id_nivel, tipo, titulo, puntos_recompensa, id_cap
+            FROM Niveles
+            ORDER BY orden
+        """)
+        niveles = cursor.fetchall()
+
+    # Armar niveles_data
     niveles_data = []
-    for cap in capitulos:
-        niveles_cap = niveles.filter(id_cap=cap.id_cap)
-        for lvl in niveles_cap:
-            niveles_data.append({
-                'capitulo': cap.nombre,
-                'nivel_id': lvl.id_nivel,
-                'tipo': lvl.tipo,
-                'titulo': lvl.titulo,
-                'puntos': lvl.puntos_recompensa,
-                'completado': lvl.id_nivel in niveles_completados,
-                'desbloqueado': lvl.id_nivel == progreso.lvl_act.id_nivel or lvl.id_nivel in niveles_completados,
-            })
+    for id_cap, nombre_cap in capitulos:
+        for nivel in niveles:
+            if nivel[4] == id_cap:
+                niveles_data.append({
+                    'capitulo': nombre_cap,
+                    'nivel_id': nivel[0],
+                    'tipo': nivel[1],
+                    'titulo': nivel[2],
+                    'puntos': nivel[3],
+                    'completado': nivel[0] in niveles_completados,
+                    'desbloqueado': True  # si quieres lógica más específica la ajustamos
+                })
 
     contexto = {
-        'username': usuario.username,
-        'rango': usuario.nivel_usuario,
-        'exp': progreso.exp_total,
-        'capitulo': progreso.cap_act.nombre,
-        'nivel': progreso.lvl_act.titulo,
+        'username': usuario['username'],
+        'rango': usuario['nivel_usuario'],
+        'exp': progreso['exp'],
+        'capitulo': progreso['capitulo'],
+        'nivel': progreso['nivel'],
         'niveles_data': niveles_data,
     }
 
-    return render(request, 'juegos/menu.html', contexto)
+    return render(request, 'juegos/menu_principal.html', contexto)

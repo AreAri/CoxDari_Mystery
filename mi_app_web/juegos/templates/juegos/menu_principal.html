@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -82,7 +83,7 @@
         <span class="badge bg-warning text-dark">Nivel actual: {{ nivel }}</span>
     </div>
 
-    {% for capitulo in niveles_data|groupby:"capitulo" %}
+    {% for capitulo in niveles_data|agrupar_por:"capitulo" %}
         <div class="capitulo-titulo">{{ capitulo.grouper }}</div>
         <div class="scroll-x">
             <div class="nivel-contenedor">

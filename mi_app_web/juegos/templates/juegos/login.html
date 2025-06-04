@@ -1,14 +1,29 @@
-<!-- templates/login.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Iniciar Sesión</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <div class="container d-flex justify-content-center align-items-center vh-100">
         <div class="card p-4 shadow rounded-4" style="width: 22rem;">
+
+            <!-- LOGO CIRCULAR -->
+            <div class="text-center mb-3">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo-img">
+            </div>
+
             <h2 class="text-center mb-4">Iniciar Sesión</h2>
             <form method="POST" action="{% url 'login' %}">
                 {% csrf_token %}
@@ -32,3 +47,4 @@
     </div>
 </body>
 </html>
+    
