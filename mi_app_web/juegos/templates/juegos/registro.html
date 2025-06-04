@@ -1,23 +1,46 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Registro</title>
-    <link rel="stylesheet" href="{% static 'juegos/estilos.css' %}">
-</head>
-<body>
-    <div class="container">
-        <h2>Registro</h2>
-        <form method="post">
-            {% csrf_token %}
-            <input type="text" name="nombre" placeholder="Nombre" required><br>
-            <input type="email" name="correo" placeholder="Correo electrónico" required><br>
-            <input type="number" name="edad" placeholder="Edad" required><br>
-            <input type="password" name="contraseña" placeholder="Contraseña" required><br>
-            <button type="submit">Registrarse</button>
-        </form>
-        <a href="{% url 'inicio' %}" class="btn">Volver al inicio</a>
+{% extends 'juegos/base_html.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-center">Registro de Usuario</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label>Nombre</label>
+        <input type="text" name="nombre" class="form-control" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label>Apellido Paterno</label>
+        <input type="text" name="ap_paterno" class="form-control" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label>Apellido Materno</label>
+        <input type="text" name="ap_materno" class="form-control" required>
+      </div>
     </div>
-</body>
-</html>
+
+    <div class="mb-3">
+      <label>Nombre de usuario</label>
+      <input type="text" name="username" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label>Correo electrónico</label>
+      <input type="email" name="correo" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label>Contraseña</label>
+      <input type="password" name="contraseña" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+      <label>URL de imagen (opcional)</label>
+      <input type="text" name="imagen" class="form-control">
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Registrarse</button>
+  </form>
+</div>
+{% endblock %}

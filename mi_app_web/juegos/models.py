@@ -1,116 +1,148 @@
 from django.db import models
-from django.utils import timezone
 
-class Rango(models.TextChoices):
-    NOVATO = "Novato"
-    JUNIOR = "Junior"
-    INTERMEDIO = "Intermedio"
-    SEMI_SENIOR = "Semi Senior"
-    EXPERTO = "Experto"
-    SENIOR = "Senior"
+# Tipos personalizados de PostgreSQL (representados como campos planos en Django)
 
-class TipoNivel(models.TextChoices):
-    TEORIA = "Teoria"
-    EJERCICIO = "Ejercicio"
-    DESAFIO = "Desafio"
-
-class Usuario(models.Model):
-    nombre = models.CharField(max_length=50)
-    ap_paterno = models.CharField(max_length=50)
-    ap_materno = models.CharField(max_length=50)
-    username = models.CharField(max_length=30, unique=True)
-    contraseña = models.CharField(max_length=128)
-    correo = models.EmailField(unique=True)
-    nivel_usuario = models.CharField(max_length=20, choices=Rango.choices, default=Rango.NOVATO)
-    imagen = models.ImageField(upload_to='usuarios/', null=True, blank=True)
-    fecha_registro = models.DateField(default=timezone.now)
-
-    def __str__(self):
-        return self.username
-
-class Capitulo(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField()
-    icono = models.CharField(max_length=255)
-    orden = models.IntegerField(default=0)
-    capitulo_anterior = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.nombre
-
-class Nivel(models.Model):
-    capitulo = models.ForeignKey(Capitulo, on_delete=models.CASCADE, default=1)
-    tipo = models.CharField(max_length=20, choices=TipoNivel.choices,default="")
-    titulo = models.CharField(max_length=100,default="")
-    puntos_recompensa = models.IntegerField(default=0)
-    orden = models.IntegerField(default=1)
-    nivel_anterior = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.titulo
-
-class NivelTeoria(models.Model):
-    nivel = models.OneToOneField(Nivel, on_delete=models.CASCADE, primary_key=True)
-    contenido = models.TextField(default="")
-
-class CasoPrueba(models.Model):
-    input = models.TextField(default="")
-    output = models.TextField(default="")
-
-class NivelEjercicio(models.Model):
-    nivel = models.OneToOneField(Nivel, on_delete=models.CASCADE, primary_key=True)
-    enunciado = models.TextField(default="")
-    solucion = models.TextField(default="")
-    casos_prueba = models.ManyToManyField(CasoPrueba, blank=True)
-
-class Personaje(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(default="")
-    imagen = models.CharField(max_length=255)
-    nivel_desbloqueo = models.ForeignKey(Nivel, null=True, blank=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.nombre
-
-class Item(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(default="")
-    imagen = models.CharField(max_length=255)
-    max_usos = models.IntegerField(default="")
-    personaje = models.ForeignKey(Personaje, null=True, blank=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.nombre
-
-class MochilaPersonaje(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    personaje = models.ForeignKey(Personaje, on_delete=models.CASCADE)
-    fecha = models.DateField(default=timezone.now)
-
-class MochilaItem(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    fecha = models.DateField(default=timezone.now)
-
-class Progreso(models.Model):
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
-    capitulo_actual = models.ForeignKey(Capitulo, on_delete=models.SET_NULL, null=True)
-    nivel_actual = models.ForeignKey(Nivel, on_delete=models.SET_NULL, null=True)
-    exp_total = models.IntegerField(default=0)
-
-class UsoItem(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    capitulo = models.ForeignKey(Capitulo, on_delete=models.CASCADE)
-    nivel = models.ForeignKey(Nivel, on_delete=models.CASCADE)
-
-class NivelCompletado(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    nivel = models.ForeignKey(Nivel, on_delete=models.CASCADE)
-    completado = models.BooleanField(default=True)
-    puntos_obtenidos = models.IntegerField(default=0)
-    intentos = models.IntegerField(default=1)
-    fecha_completado = models.DateTimeField(default=timezone.now)
+class Usuarios(models.Model):
+    id_user = models.AutoField(primary_key=True)
+    nombre_nombre = models.CharField(max_length=50)
+    nombre_ap_paterno = models.CharField(max_length=50)
+    nombre_ap_materno = models.CharField(max_length=50)
+    username = models.CharField(max_length=50, unique=True)
+    contraseña = models.CharField(max_length=100)
+    correo = models.CharField(max_length=100, unique=True)
+    nivel_usuario = models.CharField(max_length=20)  # Enum: Novato, Junior, etc.
+    imagen = models.CharField(max_length=100, blank=True, null=True)
+    fecha_registro = models.DateField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('usuario', 'nivel')
+        managed = False
+        db_table = 'Usuarios'
+
+class Capitulos(models.Model):
+    id_cap = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
+    icono = models.CharField(max_length=100, blank=True, null=True)
+    orden = models.IntegerField(unique=True)
+
+    class Meta:
+        managed = False
+        db_table = 'Capitulos'
+
+class Niveles(models.Model):
+    id_nivel = models.AutoField(primary_key=True)
+    id_cap = models.ForeignKey(Capitulos, on_delete=models.DO_NOTHING, db_column='id_cap')
+    tipo = models.CharField(max_length=20)  # Enum: Teoria, Ejercicio, Desafio
+    titulo = models.CharField(max_length=100)
+    puntos_recompensa = models.IntegerField()
+    orden = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = 'Niveles'
+
+class NivelesTeoria(models.Model):
+    id_lvT = models.OneToOneField(Niveles, primary_key=True, on_delete=models.DO_NOTHING, db_column='id_lvT')
+    contenido = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'Niveles_Teoria'
+
+class NivelesEjercicios(models.Model):
+    id_lvE = models.OneToOneField(Niveles, primary_key=True, on_delete=models.DO_NOTHING, db_column='id_lvE')
+    enunciado = models.TextField()
+    solucion = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'Niveles_Ejercicios'
+
+class CasosPrueba(models.Model):
+    id_test = models.AutoField(primary_key=True)
+    id_lvl = models.ForeignKey(NivelesEjercicios, on_delete=models.DO_NOTHING, db_column='id_lvl')
+    input = models.TextField()
+    output = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'Casos_Prueba'
+
+class Personajes(models.Model):
+    id_npc = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField()
+    imagen = models.CharField(max_length=100, blank=True, null=True)
+    id_lvT_unlock = models.ForeignKey(NivelesTeoria, on_delete=models.DO_NOTHING, db_column='id_lvT_unlock')
+
+    class Meta:
+        managed = False
+        db_table = 'Personajes'
+
+class Items(models.Model):
+    id_item = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=50)
+    descripcion = models.TextField()
+    imagen = models.CharField(max_length=100, blank=True, null=True)
+    max_usos = models.IntegerField()
+    id_personaje = models.ForeignKey(Personajes, on_delete=models.DO_NOTHING, db_column='id_personaje')
+
+    class Meta:
+        managed = False
+        db_table = 'Items'
+
+class UsoItem(models.Model):
+    id_uso = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, db_column='id_usuario')
+    id_items = models.ForeignKey(Items, on_delete=models.DO_NOTHING, db_column='id_items')
+    id_capi = models.ForeignKey(Capitulos, on_delete=models.DO_NOTHING, db_column='id_capi')
+    id_lvl = models.ForeignKey(Niveles, on_delete=models.DO_NOTHING, db_column='id_lvl')
+
+    class Meta:
+        managed = False
+        db_table = 'Uso_item'
+
+class MochilaPer(models.Model):
+    id_MP = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, db_column='id_usuario')
+    id_personaje = models.ForeignKey(Personajes, on_delete=models.DO_NOTHING, db_column='id_personaje')
+    fecha = models.DateField()
+
+    class Meta:
+        managed = False
+        db_table = 'Mochila_per'
+
+class MochilaIt(models.Model):
+    id_MI = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, db_column='id_usuario')
+    id_item = models.ForeignKey(Items, on_delete=models.DO_NOTHING, db_column='id_item')
+    fecha = models.DateField()
+
+    class Meta:
+        managed = False
+        db_table = 'Mochila_It'
+
+class Progreso(models.Model):
+    id_progreso = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, db_column='id_usuario')
+    cap_act = models.ForeignKey(Capitulos, on_delete=models.DO_NOTHING, db_column='cap_act')
+    lvl_act = models.ForeignKey(Niveles, on_delete=models.DO_NOTHING, db_column='lvl_act')
+    exp_total = models.IntegerField(default=0)
+
+    class Meta:
+        managed = False
+        db_table = 'Progreso'
+
+class NivelesCompletados(models.Model):
+    id_completado = models.AutoField(primary_key=True)
+    id_usuario = models.ForeignKey(Usuarios, on_delete=models.DO_NOTHING, db_column='id_usuario')
+    id_nivel = models.ForeignKey(Niveles, on_delete=models.DO_NOTHING, db_column='id_nivel')
+    completado = models.BooleanField(default=True)
+    puntos_obtenidos = models.IntegerField()
+    intentos = models.IntegerField(default=1)
+    fecha_completado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'Niveles_Completados'
+        unique_together = (('id_usuario', 'id_nivel'),)
