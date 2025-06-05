@@ -6,6 +6,7 @@ from django.db import connection
 from .models import Usuarios, Progreso, NivelesCompletados, Capitulos, Niveles
 import datetime
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password
 from collections import defaultdict
 
 #----------------------------------------------------------
@@ -27,22 +28,33 @@ def login_view(request):
                 port='5432'
             )
             cursor = conn.cursor()
+            # Solo buscamos el usuario por correo
             cursor.execute("""
                 SELECT id_user,
-                       (nombre).nombre || ' ' || (nombre).ap_paterno || ' ' || (nombre).ap_materno AS nombre_completo
+                       (nombre).nombre || ' ' || (nombre).ap_paterno || ' ' || (nombre).ap_materno AS nombre_completo,
+                       contraseña
                 FROM Usuarios
-                WHERE correo = %s AND contraseña = %s
-            """, [correo, password])
+                WHERE correo = %s
+            """, [correo])
             user = cursor.fetchone()
             cursor.close()
             conn.close()
+
         except Exception as e:
             return render(request, 'juegos/login.html', {'error': 'Error de conexión con la base de datos.'})
 
         if user:
-            request.session['usuario_id'] = user[0]
-            request.session['usuario_nombre'] = user[1]
-            return redirect('menu')
+            user_id = user[0]
+            user_nombre = user[1]
+            password_hash = user[2]
+
+            if check_password(password, password_hash):
+                request.session['usuario_id'] = user_id
+                request.session['usuario_nombre'] = user_nombre
+                return redirect('menu')
+            else:
+                return render(request, 'juegos/login.html', {'error': 'Correo o contraseña incorrectos'})
+
         else:
             return render(request, 'juegos/login.html', {'error': 'Correo o contraseña incorrectos'})
 
