@@ -216,7 +216,7 @@
 <div class="sidebar">
   <div>
     <div class="perfil">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Faker_2020_interview.jpg" alt="Perfil">
+      <img src="{% if imagen_url %}{{ imagen_url }}{% else %}{% static 'images/default_user.avif' %}{% endif %}" alt="Perfil">
       <h5>{{ username }}</h5>
     </div>
     <nav class="nav flex-column">

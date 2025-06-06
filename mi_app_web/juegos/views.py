@@ -206,11 +206,12 @@ def menu_principal(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT id_user,
-                   (nombre).nombre AS nombre,
-                   (nombre).ap_paterno AS ap_paterno,
-                   (nombre).ap_materno AS ap_materno,
-                   username,
-                   nivel_usuario
+                (nombre).nombre AS nombre,
+                (nombre).ap_paterno AS ap_paterno,
+                (nombre).ap_materno AS ap_materno,
+                username,
+                nivel_usuario,
+                imagen
             FROM Usuarios
             WHERE id_user = %s
         """, [id_usuario])
@@ -224,6 +225,7 @@ def menu_principal(request):
             'nombre_completo': f"{usuario_raw[1]} {usuario_raw[2]} {usuario_raw[3]}",
             'username': usuario_raw[4],
             'nivel_usuario': usuario_raw[5],
+            'imagen': usuario_raw[6],
         }
 
         cursor.execute("""
@@ -284,6 +286,7 @@ def menu_principal(request):
         'capitulo': progreso['capitulo'],
         'nivel': progreso['nivel'],
         'niveles_data': niveles_data,
+        'imagen_url': usuario['imagen'],  # <-- importante
     }
 
     return render(request, 'juegos/menu_principal.html', contexto)
