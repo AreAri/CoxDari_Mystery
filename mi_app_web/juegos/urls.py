@@ -10,4 +10,5 @@ urlpatterns = [
     path('nivel/', views.jugar_nivel, name='jugar_nivel'),
     path('mochila/', views.mochila, name='mochila'),
     path('registro/', views.registro, name='registro'),
+    path('perfil/', views.perfil_usuario, name='perfil_usuario'),
 ]

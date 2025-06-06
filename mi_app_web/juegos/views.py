@@ -290,3 +290,92 @@ def menu_principal(request):
     }
 
     return render(request, 'juegos/menu_principal.html', contexto)
+
+#--------------------------------------------------------------------------------
+
+def perfil_usuario(request):
+    # Validar sesión
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+
+    user_id = request.session['usuario_id']
+
+    if request.method == 'POST':
+        if 'editar' in request.POST:
+            # Obtener datos del formulario
+            username = request.POST.get('username').strip()
+            correo = request.POST.get('correo').strip()
+            nombre = request.POST.get('nombre').strip()
+            ap_paterno = request.POST.get('ap_paterno').strip()
+            ap_materno = request.POST.get('ap_materno').strip()
+            contraseña = request.POST.get('contraseña').strip()
+
+            # Validar campos aquí si deseas (ejemplo básico)
+            if not all([username, correo, nombre, ap_paterno, ap_materno, contraseña]):
+                messages.error(request, "Todos los campos son obligatorios.")
+            else:
+                # Hashear la contraseña
+                hashed_password = make_password(contraseña)
+
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("""
+                            UPDATE Usuarios
+                            SET username = %s,
+                                correo = %s,
+                                nombre = ROW(%s, %s, %s),
+                                contraseña = %s
+                            WHERE id_user = %s
+                        """, [username, correo, nombre, ap_paterno, ap_materno, hashed_password, user_id])
+                    messages.success(request, "Perfil actualizado correctamente.")
+                    # Actualizar nombre en sesión por si se muestra en menú
+                    request.session['usuario_nombre'] = f"{nombre} {ap_paterno} {ap_materno}"
+                except Exception as e:
+                    messages.error(request, f"Error al actualizar perfil: {e}")
+
+        elif 'eliminar' in request.POST:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM Usuarios WHERE id_user = %s", [user_id])
+                request.session.flush()  # cerrar sesión
+                messages.success(request, "Cuenta eliminada correctamente.")
+                return redirect('login')
+            except Exception as e:
+                messages.error(request, f"Error al eliminar cuenta: {e}")
+
+    # Cargar datos para mostrar en el formulario (GET o POST después)
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT username, correo,
+                   (nombre).nombre, (nombre).ap_paterno, (nombre).ap_materno,
+                   contraseña
+            FROM Usuarios
+            WHERE id_user = %s
+        """, [user_id])
+        row = cursor.fetchone()
+
+    if not row:
+        messages.error(request, "Usuario no encontrado.")
+        return redirect('login')
+
+    datos_usuario = {
+        'username': row[0],
+        'correo': row[1],
+        'nombre': row[2],
+        'ap_paterno': row[3],
+        'ap_materno': row[4],
+        'contraseña': row[5],  # Aquí mostrarás la contraseña hasheada, no la real
+    }
+
+    # También pasar datos para menú (opcional)
+    contexto_menu = {
+        'username': datos_usuario['username'],
+        'imagen_url': None,  # O obtén URL si tienes campo imagen
+        'rango': '',         # Agrega rango si lo tienes
+        'exp': 0,            # Agrega experiencia si aplica
+        'capitulo': '',      # Agrega capítulo actual si aplica
+        'nivel': '',         # Agrega nivel actual si aplica
+        'datos_usuario': datos_usuario,
+    }
+
+    return render(request, 'juegos/perfil_usuario.html', contexto_menu)

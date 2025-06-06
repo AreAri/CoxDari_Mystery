@@ -228,9 +228,9 @@
       <h5>{{ username }}</h5>
     </div>
     <nav class="nav flex-column">
-      <a class="nav-link" href="#">🏠 Inicio</a>
+      <a class="nav-link" href="{% url 'menu' %}">🏠 Inicio</a>
       <a class="nav-link" href="#">🎒 Mochila</a>
-      <a class="nav-link" href="{% url 'perfil_usuario' %}">👤 Usuario</a>
+      <a class="nav-link" href="#">👤 Usuario</a>
       <a class="nav-link" href="{% url 'index' %}">🚪 Cerrar sesión</a>
     </nav>
     <div class="dark-mode-toggle">
@@ -249,51 +249,58 @@
 <!-- Contenido central -->
 <div class="main-content">
   <h2 class="text-center mb-4">¡Bienvenido {{ username }}!</h2>
-  <div class="text-center mb-4">
-    <span class="badge bg-primary">Rango: {{ rango }}</span>
-    <span class="badge bg-success">Exp: {{ exp }}</span>
-    <span class="badge bg-info text-dark">Capítulo actual: {{ capitulo }}</span>
-    <span class="badge bg-warning text-dark">Nivel actual: {{ nivel }}</span>
-  </div>
-
-  {% for capitulo in niveles_data|agrupar_por:"capitulo" %}
-    <div class="capitulo-titulo">{{ capitulo.grouper }}</div>
-    <div class="scroll-x">
-      <div class="nivel-contenedor">
-        {% for nivel in capitulo.list %}
-          {% if not forloop.first %}
-            <div class="linea-conexion"></div>
-          {% endif %}
-          <div class="nivel-nodo
-            {% if nivel.completado %}completado
-            {% elif nivel.desbloqueado %}desbloqueado
-            {% else %}bloqueado{% endif %}">
-            <div class="icono-tipo">
-              {% if nivel.tipo == "Teoria" %}📘
-              {% elif nivel.tipo == "Ejercicio" %}🧩
-              {% elif nivel.tipo == "Desafio" %}🔥
-              {% endif %}
-            </div>
-            <div class="nivel-titulo">{{ nivel.titulo }}</div>
-            <div class="estado-texto">
-              {% if nivel.completado %}✅ Completado
-              {% elif nivel.desbloqueado %}🔓 Desbloqueado
-              {% else %}🔒 Bloqueado
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-      </div>
+<h2 class="text-center mb-4">👤 Perfil de Usuario</h2>
+<form method="post" class="container" style="max-width: 600px;">
+  {% csrf_token %}
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   {% endfor %}
-</div>
+{% endif %}
 
-<!-- Panel derecho -->
-<div class="infobar d-flex flex-column align-items-center justify-content-start pt-4">
-  <img src="{% static 'images/logo.png' %}" alt="Logo">
-  <h5>COXDARY MISTERY</h5>
-  <p>¡Explora, aprende y disfruta!</p>
-</div>
+
+  <div class="mb-3">
+    <label class="form-label">Nombre de usuario</label>
+    <input type="text" class="form-control" name="username" value="{{ datos_usuario.username }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Correo</label>
+    <input type="email" class="form-control" name="correo" value="{{ datos_usuario.correo }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Nombre(s)</label>
+    <input type="text" class="form-control" name="nombre" value="{{ datos_usuario.nombre }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Apellido paterno</label>
+    <input type="text" class="form-control" name="ap_paterno" value="{{ datos_usuario.ap_paterno }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Apellido materno</label>
+    <input type="text" class="form-control" name="ap_materno" value="{{ datos_usuario.ap_materno }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Contraseña</label>
+    <input type="password" class="form-control" name="contraseña" value="{{ datos_usuario.contraseña }}" required>
+  </div>
+
+  <div class="d-flex justify-content-between mt-4">
+    <button type="submit" name="editar" class="btn btn-warning">💾 Guardar cambios</button>
+    <button type="submit" name="eliminar" class="btn btn-danger">🗑️ Eliminar cuenta</button>
+  </div>
+</form>
+
+ 
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
