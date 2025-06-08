@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
-from .models import Usuarios, Progreso, NivelesCompletados, Capitulos, Niveles
+from .models import Usuarios, Progreso, NivelesCompletados, Capitulos, Niveles,MochilaIt, MochilaPer
 import datetime
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
@@ -139,9 +139,71 @@ def jugar_nivel(request):
     })
 
 #---------------------------------------------------------
+def dictfetchall(cursor):
+    """Convierte los resultados del cursor a una lista de diccionarios."""
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+#------------------------------------------------------
 def mochila(request):
-    return render(request, 'mochila.html')
 
+    if 'usuario_id' not in request.session:
+        return redirect('login')
+
+    user_id = request.session['usuario_id']
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT mi.id_MI, mi.fecha, i.nombre, i.descripcion
+            FROM mochila_it mi
+            JOIN items i ON mi.id_item = i.id_item
+            WHERE mi.id_usuario = %s
+        """, [request.session.get("usuario_id")])
+        mochila_items = dictfetchall(cursor)
+    
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT username, correo,
+                   (nombre).nombre, (nombre).ap_paterno, (nombre).ap_materno,
+                   contraseña,imagen
+            FROM Usuarios
+            WHERE id_user = %s
+        """, [user_id])
+        row = cursor.fetchone()
+
+    if not row:
+        messages.error(request, "Usuario no encontrado.")
+        return redirect('login')
+
+    usuario_menu = {
+        'username': row[0],
+        'correo': row[1],
+        'nombre': row[2],
+        'ap_paterno': row[3],
+        'ap_materno': row[4],
+        'contraseña': '',  # Aquí mostrarás la contraseña hasheada, no la real
+        'imagen':row[6]
+    }
+
+    # También pasar datos para menú (opcional)
+    contexto_menu = {
+        'username': usuario_menu['username'],
+        'imagen_url':usuario_menu['imagen'],  # O obtén URL si tienes campo imagen
+        'rango': '',         # Agrega rango si lo tienes
+        'exp': 0,            # Agrega experiencia si aplica
+        'capitulo': '',      # Agrega capítulo actual si aplica
+        'nivel': '',         # Agrega nivel actual si aplica
+        'datos_usuario': usuario_menu,
+    }
+
+
+    return render(request, 'juegos/mochila.html', {
+        'items': mochila_items,
+        'username': usuario_menu['username'],
+        'imagen_url': usuario_menu['imagen'],
+    })
 #---------------------------------------------------------
 def registro(request):
     if request.method == 'POST':
@@ -276,7 +338,7 @@ def menu_principal(request):
                     'titulo': nivel[2],
                     'puntos': nivel[3],
                     'completado': nivel[0] in niveles_completados,
-                    'desbloqueado': True  # si quieres lógica más específica la ajustamos
+                    'desbloqueado': False  # si quieres lógica más específica la ajustamos
                 })
 
     contexto = {
@@ -308,27 +370,35 @@ def perfil_usuario(request):
             nombre = request.POST.get('nombre').strip()
             ap_paterno = request.POST.get('ap_paterno').strip()
             ap_materno = request.POST.get('ap_materno').strip()
-            contraseña = request.POST.get('contraseña').strip()
+            nueva_contraseña = request.POST.get('contraseña').strip()
+            imagen = request.POST.get('imagen') or 'default.png'
 
-            # Validar campos aquí si deseas (ejemplo básico)
-            if not all([username, correo, nombre, ap_paterno, ap_materno, contraseña]):
-                messages.error(request, "Todos los campos son obligatorios.")
+            # Validar campos (sin requerir contraseña si no se desea cambiar)
+            if not all([username, correo, nombre, ap_paterno, ap_materno]):
+                messages.error(request, "Los campos no pueden estar vacíos.")
             else:
-                # Hashear la contraseña
-                hashed_password = make_password(contraseña)
-
                 try:
+                    # Obtener contraseña actual si el campo viene vacío
+                    if nueva_contraseña:
+                        contraseña_final = make_password(nueva_contraseña)
+                    else:
+                        with connection.cursor() as cursor:
+                            cursor.execute("SELECT contraseña FROM Usuarios WHERE id_user = %s", [user_id])
+                            contraseña_final = cursor.fetchone()[0]  # contraseña actual
+
+                    # Actualizar datos
                     with connection.cursor() as cursor:
                         cursor.execute("""
                             UPDATE Usuarios
                             SET username = %s,
                                 correo = %s,
                                 nombre = ROW(%s, %s, %s),
-                                contraseña = %s
+                                contraseña = %s,
+                                imagen = %s
                             WHERE id_user = %s
-                        """, [username, correo, nombre, ap_paterno, ap_materno, hashed_password, user_id])
+                        """, [username, correo, nombre, ap_paterno, ap_materno, contraseña_final, imagen, user_id])
+
                     messages.success(request, "Perfil actualizado correctamente.")
-                    # Actualizar nombre en sesión por si se muestra en menú
                     request.session['usuario_nombre'] = f"{nombre} {ap_paterno} {ap_materno}"
                 except Exception as e:
                     messages.error(request, f"Error al actualizar perfil: {e}")
@@ -348,7 +418,7 @@ def perfil_usuario(request):
         cursor.execute("""
             SELECT username, correo,
                    (nombre).nombre, (nombre).ap_paterno, (nombre).ap_materno,
-                   contraseña
+                   contraseña,imagen
             FROM Usuarios
             WHERE id_user = %s
         """, [user_id])
@@ -364,13 +434,14 @@ def perfil_usuario(request):
         'nombre': row[2],
         'ap_paterno': row[3],
         'ap_materno': row[4],
-        'contraseña': row[5],  # Aquí mostrarás la contraseña hasheada, no la real
+        'contraseña': '',  # Aquí mostrarás la contraseña hasheada, no la real
+        'imagen':row[6]
     }
 
     # También pasar datos para menú (opcional)
     contexto_menu = {
         'username': datos_usuario['username'],
-        'imagen_url': None,  # O obtén URL si tienes campo imagen
+        'imagen_url':datos_usuario['imagen'],  # O obtén URL si tienes campo imagen
         'rango': '',         # Agrega rango si lo tienes
         'exp': 0,            # Agrega experiencia si aplica
         'capitulo': '',      # Agrega capítulo actual si aplica
