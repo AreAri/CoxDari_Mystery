@@ -12,4 +12,6 @@ urlpatterns = [
     path('perfil/', views.perfil_usuario, name='perfil_usuario'),
     path('nivel/<int:id_nivel>/jugar/', views.jugar_nivel, name='jugar_nivel'),
     path('progreso/inicializar/', views.inicializar_progreso, name='inicializar_progreso'),
+    path('nivel-demo/', views.nivel_demo, name='nivel_demo'),
+    path('nivel-demo2/', views.nivel_demo2, name='nivel_demo2'),
 ]

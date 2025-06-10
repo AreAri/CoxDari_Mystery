@@ -532,3 +532,15 @@ def inicializar_progreso(request):
             return HttpResponse("Ya tienes progreso registrado.")
 
     return redirect('menu_principal')  # Cambia según el nombre real de tu menú
+
+#--------------------------------------------------------------------------------------
+def nivel_demo(request):
+    return render(request, 'juegos/nivel_demo.html', {
+        'username': request.user.username,
+    })
+
+def nivel_demo2(request):
+    return render(request, 'juegos/nivel_demo2.html', {
+        'username': request.user.username,
+    })
+

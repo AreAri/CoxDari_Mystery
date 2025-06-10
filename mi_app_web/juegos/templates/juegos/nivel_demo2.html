@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nivel Demo Lógico</title>
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #1f1c2c;
+      color: white;
+    }
+
+    #blocklyDiv {
+      height: 60vh;
+      width: 100%;
+      border: 2px solid #444;
+    }
+
+    .container {
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .btn-run {
+      margin-top: 1rem;
+      padding: 0.8rem 1.5rem;
+      background-color: #0f3460;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn-run:hover {
+      background-color: #e94560;
+    }
+
+    .message {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .icono-tipo {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .nivel-titulo {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .estado-texto {
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Nivel Demo Lógico - ¿Es par o impar?</h2>
+    <p>Crea un programa que determine si el número 4 es par o impar. Muestra "Es par" si lo es, y "Es impar" si no.</p>
+    <div id="blocklyDiv"></div>
+    <button class="btn-run" onclick="verificarCodigo()">Verificar</button>
+    <a href="{% url 'menu' %}" style="text-decoration: none;">
+      <div class="nivel-nodo desbloqueado mt-4" style="width: 160px;">
+      <div class="nivel-titulo">Dejar el Demo</div>
+      <div class="estado-texto">Menu Principal</div>
+      </div>
+    </a>
+    <div class="message" id="mensaje"></div>
+  </div>
+
+  <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+    <block type="controls_if"></block>
+    <block type="logic_compare"></block>
+    <block type="math_arithmetic"></block>
+    <block type="math_number"></block>
+    <block type="text_print"></block>
+    <block type="text"></block>
+  </xml>
+
+  <script>
+    const workspace = Blockly.inject('blocklyDiv', {
+      toolbox: document.getElementById('toolbox'),
+      theme: Blockly.Themes.Dark
+    });
+
+    function verificarCodigo() {
+      const codigo = Blockly.JavaScript.workspaceToCode(workspace).trim();
+
+      const esperado = `if (4 % 2 === 0) {\n  console.log("Es par");\n} else {\n  console.log("Es impar");\n}`;
+
+      const mensajeDiv = document.getElementById("mensaje");
+      if (codigo === esperado) {
+        mensajeDiv.textContent = "✅ ¡Código correcto! Nivel completado.";
+        mensajeDiv.style.color = "lightgreen";
+      } else {
+        mensajeDiv.textContent = "❌ Aún no es correcto. Intenta de nuevo.";
+        mensajeDiv.style.color = "tomato";
+      }
+    }
+  </script>
+</body>
+</html>
