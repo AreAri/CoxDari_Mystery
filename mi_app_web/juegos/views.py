@@ -13,7 +13,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import get_template
 from .models import Progreso 
-
+from .models import Niveles, NivelesTeoria, Capitulos
+from django.utils import timezone
 #----------------------------------------------------------
 def index(request):
     return render(request, 'juegos/index.html')
@@ -81,9 +82,127 @@ def jugar_nivel(request, id_nivel):
         return redirect('login')
 
     nivel = get_object_or_404(Niveles, id_nivel=id_nivel)
-    template_name = f'juegos/nivel{id_nivel}.html'  # Ej: juegos/nivel1.html
-    return render(request, template_name, {'nivel': nivel})
 
+    try:
+        teoria = NivelesTeoria.objects.get(id_lvt=nivel)
+    except NivelesTeoria.DoesNotExist:
+        teoria = None
+
+    preguntas_por_nivel = {
+        1: [
+            {
+                'pregunta': '¿Qué es una estructura de datos?',
+                'opciones': ['Un sistema operativo', 'Una forma de almacenar y organizar datos', 'Un lenguaje de programación'],
+                'respuesta_correcta': 'Una forma de almacenar y organizar datos'
+            },
+            {
+                'pregunta': '¿Cuál de estas es una estructura de datos lineal?',
+                'opciones': ['Árbol binario', 'Lista enlazada', 'Grafo dirigido'],
+                'respuesta_correcta': 'Lista enlazada'
+            }
+        ],
+        2: [
+            {
+                'pregunta': '¿Qué es una pila (stack)?',
+                'opciones': ['FIFO', 'LIFO', 'LILO'],
+                'respuesta_correcta': 'LIFO'
+            },
+            {
+                'pregunta': '¿Cuál es la operación para eliminar un elemento de una pila?',
+                'opciones': ['Push', 'Insert', 'Pop'],
+                'respuesta_correcta': 'Pop'
+            }
+        ],
+        3: [
+            {
+                'pregunta': '¿Cuál de estas estructuras es **lineal**?',
+                'opciones': ['Árbol binario', 'Lista enlazada', 'Grafo', 'Trie'],
+                'respuesta_correcta': 'Lista enlazada'
+            },
+            {
+                'pregunta': '¿Cuál de estas estructuras **no** es lineal?',
+                'opciones': ['Array', 'Cola', 'Grafo', 'Pila'],
+                'respuesta_correcta': 'Grafo'
+            }
+        ],
+        5: [
+            {
+                'pregunta': '¿Qué representa `%d` en C?',
+                'opciones': ['Decimal', 'Doble', 'Dirección', 'Dato'],
+                'respuesta_correcta': 'Decimal'
+            },
+            {
+                'pregunta': '¿Cuál es el especificador para un **carácter**?',
+                'opciones': ['%c', '%f', '%d', '%s'],
+                'respuesta_correcta': '%c'
+            }
+        ],
+        6: [
+            {
+                'pregunta': '¿Cuál es el operador que obtiene la **dirección** de una variable en C?',
+                'opciones': ['*', '&', '#', '@'],
+                'respuesta_correcta': '&'
+            },
+            {
+                'pregunta': '¿Qué operador se usa para **acceder al valor** de un puntero?',
+                'opciones': ['&', '*', '^', '!'],
+                'respuesta_correcta': '*'
+            }
+        ],
+
+        4: [
+            {
+                'pregunta': '¿Cuál es el tipo correcto para declarar un puntero a entero en C?',
+                'opciones': ['int puntero;', 'int *puntero;', 'int &puntero;', 'pointer int;'],
+                'respuesta_correcta': 'int *puntero;'
+            },
+            {
+                'pregunta': '¿Qué línea asigna al puntero la dirección de la variable `numero`?',
+                'opciones': ['puntero = numero;', 'puntero = *numero;', 'puntero = &numero;', 'puntero = &&numero;'],
+                'respuesta_correcta': 'puntero = &numero;'
+            }
+        ],
+
+    }
+
+    preguntas = preguntas_por_nivel.get(id_nivel, [])
+
+    resultado = None  # Puede ser 'correcto' o 'incorrecto'
+
+    if request.method == 'POST':
+        correcto = all(
+            request.POST.get(f'pregunta_{i}') == p['respuesta_correcta']
+            for i, p in enumerate(preguntas)
+        )
+
+        resultado = 'correcto' if correcto else 'incorrecto'
+
+        if correcto:
+            now = timezone.now()
+            with connection.cursor() as cursor:
+                # Intentamos actualizar primero
+                cursor.execute("""
+                    UPDATE Niveles_Completados
+                    SET completado = TRUE,
+                        puntos_obtenidos = %s,
+                        intentos = %s,
+                        fecha_completado = %s
+                    WHERE id_usuario = %s AND id_nivel = %s
+                """, [100, 1, now, id_usuario, id_nivel])
+
+                if cursor.rowcount == 0:
+                    # No existía registro previo, insertamos uno nuevo
+                    cursor.execute("""
+                        INSERT INTO Niveles_Completados (id_usuario, id_nivel, completado, puntos_obtenidos, intentos, fecha_completado)
+                        VALUES (%s, %s, TRUE, %s, %s, %s)
+                    """, [id_usuario, id_nivel, 100, 1, now])
+
+    return render(request, f'juegos/nivel{id_nivel}.html', {
+        'nivel': nivel,
+        'teoria': teoria,
+        'preguntas': preguntas,
+        'resultado': resultado
+    })
 #---------------------------------------------------------
 def dictfetchall(cursor):
     """Convierte los resultados del cursor a una lista de diccionarios."""
@@ -397,3 +516,19 @@ def perfil_usuario(request):
     return render(request, 'juegos/perfil_usuario.html', contexto_menu)
 
 #---------------------------------------------------------------------------------
+def inicializar_progreso(request):
+    print("Usuario autenticado:", request.user.is_authenticated)
+    user_id = request.user.id
+
+    with connection.cursor() as cursor:
+        # Verificamos si ya existe progreso
+        cursor.execute("SELECT COUNT(*) FROM Progreso WHERE id_usuario = %s", [user_id])
+        ya_existe = cursor.fetchone()[0]
+
+        if not ya_existe:
+            cursor.execute("SELECT inicializar_progreso(%s)", [user_id])  # Si tienes una función SQL así
+            return HttpResponse("Progreso inicializado correctamente.")
+        else:
+            return HttpResponse("Ya tienes progreso registrado.")
+
+    return redirect('menu_principal')  # Cambia según el nombre real de tu menú
