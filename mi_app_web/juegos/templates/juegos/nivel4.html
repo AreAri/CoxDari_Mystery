@@ -1,0 +1,29 @@
+{% extends 'juegos/base_html.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Nivel 4: Señor Apuntador y sus aliados</h2>
+    <p>Contenido de la teoría...</p>
+
+    <form id="form-nivel" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Completar Nivel</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("form-nivel").addEventListener("submit", function(e) {
+    e.preventDefault();
+    fetch("{% url 'completar_nivel' nivel_id %}", {
+        method: "POST",
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(response => {
+        if (response.ok) {
+            alert("¡Nivel completado!");
+            window.location.href = "{% url 'menu' %}";
+        }
+    });
+});
+</script>
+{% endblock %}

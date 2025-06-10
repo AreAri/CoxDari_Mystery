@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Señor Apuntador y sus Aliados</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 2rem;
+    }
+    .juego {
+      background-color: #2d2a42;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    .btn-correcto {
+      background-color: #28a745;
+      border: none;
+    }
+    .btn-incorrecto {
+      background-color: #dc3545;
+      border: none;
+    }
+    #mensaje-final {
+      margin-top: 2rem;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="juego text-center">
+    <h2>🧠 Señor Apuntador y sus Aliados</h2>
+    <p>¿Cuál es la función del señor apuntador?</p>
+
+    <div class="mt-3">
+      <button class="btn btn-incorrecto m-2">Liderar las tropas</button>
+      <button class="btn btn-correcto m-2" onclick="nivelCompletado()">Apuntar ideas clave</button>
+      <button class="btn btn-incorrecto m-2">Cocinar en el campamento</button>
+    </div>
+
+    <div id="mensaje-final" class="alert alert-success">
+      <h4>✅ ¡Nivel completado!</h4>
+      <p>¡Ganaste experiencia!</p>
+      <a href="{% url 'menu' %}" class="btn btn-primary mt-3">Volver al menú</a>
+    </div>
+  </div>
+
+  <script>
+    function nivelCompletado() {
+      fetch("{% url 'completar_nivel' nivel_id=1 %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      }).then(response => {
+        if (response.ok) {
+          document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+          document.getElementById('mensaje-final').style.display = 'block';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

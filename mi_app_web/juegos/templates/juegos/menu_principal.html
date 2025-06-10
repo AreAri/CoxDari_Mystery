@@ -264,6 +264,8 @@
           {% if not forloop.first %}
             <div class="linea-conexion"></div>
           {% endif %}
+
+          <a href="{% url 'jugar_nivel' nivel.nivel_id %}" style="text-decoration: none;">
           <div class="nivel-nodo
             {% if nivel.completado %}completado
             {% elif nivel.desbloqueado %}desbloqueado
@@ -282,6 +284,7 @@
               {% endif %}
             </div>
           </div>
+          </a>
         {% endfor %}
       </div>
     </div>

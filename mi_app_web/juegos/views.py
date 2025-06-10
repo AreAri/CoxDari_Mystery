@@ -1,5 +1,5 @@
 import psycopg2
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
@@ -8,6 +8,11 @@ import datetime
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
 from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.template.loader import get_template
+from .models import Progreso 
 
 #----------------------------------------------------------
 def index(request):
@@ -68,75 +73,16 @@ def logout_view(request):
     return redirect('login')
 
 #---------------------------------------------------------
-def continuar_nivel(request):
-    if 'usuario_id' not in request.session:
-        return redirect('login')
-
-    user_id = request.session['usuario_id']
-
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT lvl_act FROM Progreso WHERE id_usuario = %s
-        """, [user_id])
-        id_nivel = cursor.fetchone()[0]
-
-    return redirect(f'/nivel/{id_nivel}/')  # Esta URL la crearemos luego
 
 #---------------------------------------------------------
-def jugar_nivel(request):
-    if 'usuario_id' not in request.session:
+def jugar_nivel(request, id_nivel):
+    id_usuario = request.session.get('usuario_id')
+    if not id_usuario:
         return redirect('login')
 
-    id_usuario = request.session['usuario_id']
-
-    with connection.cursor() as cursor:
-        # Obtener progreso actual
-        cursor.execute("""
-            SELECT N.id_nivel, N.tipo, N.titulo, NT.contenido, NE.enunciado
-            FROM Progreso P
-            JOIN Niveles N ON P.lvl_act = N.id_nivel
-            LEFT JOIN Niveles_Teoria NT ON NT.id_lvT = N.id_nivel
-            LEFT JOIN Niveles_Ejercicios NE ON NE.id_lvE = N.id_nivel
-            WHERE P.id_usuario = %s
-        """, [id_usuario])
-        nivel = cursor.fetchone()
-
-    if not nivel:
-        return render(request, 'jugar_nivel.html', {'mensaje': 'No hay nivel disponible'})
-
-    id_nivel, tipo, titulo, contenido, enunciado = nivel
-
-    # Si POST, validar respuesta (solo para ejercicio)
-    if request.method == 'POST' and tipo == 'Ejercicio':
-        respuesta = request.POST.get('respuesta', '').strip()
-
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT solucion FROM Niveles_Ejercicios WHERE id_lvE = %s", [id_nivel])
-            solucion = cursor.fetchone()[0].strip()
-
-            if respuesta.lower() == solucion.lower():
-                # Insertar en Niveles_Completados → triggers hacen el resto
-                cursor.execute("""
-                    INSERT INTO Niveles_Completados (id_usuario, id_nivel, puntos_obtenidos)
-                    VALUES (%s, %s, (SELECT puntos_recompensa FROM Niveles WHERE id_nivel = %s))
-                    ON CONFLICT (id_usuario, id_nivel) DO NOTHING
-                """, [id_usuario, id_nivel, id_nivel])
-
-                return redirect('menu')  # éxito → vuelve al menú
-            else:
-                mensaje = "Respuesta incorrecta. Intenta nuevamente."
-                return render(request, 'jugar_nivel.html', {
-                    'tipo': tipo, 'titulo': titulo, 'enunciado': enunciado,
-                    'mensaje': mensaje
-                })
-
-    # Mostrar teoría o ejercicio
-    return render(request, 'jugar_nivel.html', {
-        'tipo': tipo,
-        'titulo': titulo,
-        'contenido': contenido,
-        'enunciado': enunciado,
-    })
+    nivel = get_object_or_404(Niveles, id_nivel=id_nivel)
+    template_name = f'juegos/nivel{id_nivel}.html'  # Ej: juegos/nivel1.html
+    return render(request, template_name, {'nivel': nivel})
 
 #---------------------------------------------------------
 def dictfetchall(cursor):
@@ -338,7 +284,7 @@ def menu_principal(request):
                     'titulo': nivel[2],
                     'puntos': nivel[3],
                     'completado': nivel[0] in niveles_completados,
-                    'desbloqueado': False  # si quieres lógica más específica la ajustamos
+                    'desbloqueado': True  # si quieres lógica más específica la ajustamos
                 })
 
     contexto = {
@@ -354,7 +300,6 @@ def menu_principal(request):
     return render(request, 'juegos/menu_principal.html', contexto)
 
 #--------------------------------------------------------------------------------
-
 def perfil_usuario(request):
     # Validar sesión
     if 'usuario_id' not in request.session:
@@ -450,3 +395,5 @@ def perfil_usuario(request):
     }
 
     return render(request, 'juegos/perfil_usuario.html', contexto_menu)
+
+#---------------------------------------------------------------------------------
